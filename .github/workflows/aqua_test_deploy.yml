@@ -1,0 +1,53 @@
+name: Terraform Apply
+
+on:
+  push
+
+jobs:
+  terraform_deploy:
+    runs-on: ubuntu-18.04
+
+    env:
+      ARM_CLIENT_ID: d3d17382-1545-4638-be65-12689dfce3cf
+      ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
+      ARM_SUBSCRIPTION_ID: 4df2186d-f231-46ca-94bf-29b688b83f88
+      ARM_TENANT_ID: a5263408-be54-454f-9e5b-791360c18b68
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.4
+          terraform_wrapper: false
+
+      - name: CDKTF install
+        run: npm install -g cdktf-cli
+
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: CDKTF init
+        run: mkdir cdk && cd cdk && cdktf init --template="typescript" --project-name aqua_test --project-description aqua_test --local
+
+      - name: CDKTF synth
+        run: terraform -version && cp main.ts cdk/ && cp cdktf.json cdk/ && cd cdk && cdktf get && cdktf synth
+
+      - name: Download artifact
+        uses: actions/download-artifact@master
+        with:
+          name: tfstate
+          path: cdk/terraform.vm.tfstate
+        continue-on-error: true
+
+      - name: CDKTF deploy
+        run: cd cdk && cdktf deploy --auto-approve
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: tfstate
+          path: cdk/terraform.vm.tfstate

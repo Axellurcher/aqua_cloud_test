@@ -1,0 +1,8 @@
+$sourceDir = "/source"
+$targetDir = "/dest"
+
+$list = Get-Childitem $sourceDir | Select-String "sometext" -List | Select -Unique Path
+
+foreach ($file in $list) {
+  Copy-Item $file.Path -Destination $targetDir
+}
