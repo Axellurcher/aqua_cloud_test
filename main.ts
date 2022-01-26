@@ -9,7 +9,7 @@ class MyStack extends TerraformStack {
       features: {}
     })
     let rg = new ResourceGroup(this, "rg1", {
-      name: "rg1",
+      name: "resgroup",
       location: "eastus"
     })
     let vnet = new VirtualNetwork(this, "vnet1", {
@@ -55,7 +55,8 @@ class MyStack extends TerraformStack {
         sku: "2016-Datacenter",
         version: "latest",
     },
-  }); 
+  });
+  
   }
 }
 
